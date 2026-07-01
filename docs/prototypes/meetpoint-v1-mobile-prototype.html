@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MeetPoint AI V1 Mobile Prototype</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --blue: #1667e8;
+        --blue-weak: #e8f0ff;
+        --ink: #172033;
+        --muted: #667085;
+        --line: #d9e0ea;
+        --paper: #ffffff;
+        --bg: #eef2f6;
+        --green: #22a06b;
+        --green-weak: #e8f7ef;
+        --amber: #b7791f;
+        --amber-weak: #fff4db;
+        --red: #c83532;
+        --red-weak: #fff0ef;
+        --purple: #6b4eff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(rgba(23, 32, 51, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(23, 32, 51, 0.04) 1px, transparent 1px),
+          var(--bg);
+        background-size: 24px 24px;
+      }
+
+      .page {
+        min-height: 100vh;
+        padding: 32px 28px 48px;
+      }
+
+      .hero {
+        max-width: 1180px;
+        margin: 0 auto 24px;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: flex-end;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 30px;
+        line-height: 1.18;
+        letter-spacing: 0;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 720px;
+        line-height: 1.7;
+        font-size: 15px;
+      }
+
+      .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.74);
+        border-radius: 999px;
+        padding: 0 12px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .board {
+        max-width: 1240px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 26px;
+        align-items: start;
+      }
+
+      .frame-wrap {
+        display: grid;
+        gap: 10px;
+        justify-items: center;
+      }
+
+      .caption {
+        width: min(100%, 360px);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .caption strong {
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      .phone {
+        position: relative;
+        width: 360px;
+        height: 780px;
+        overflow: hidden;
+        border-radius: 32px;
+        border: 10px solid #101827;
+        background: #f8fafc;
+        box-shadow: 0 24px 70px rgba(16, 24, 39, 0.22);
+      }
+
+      .screen {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #f7f9fc;
+      }
+
+      .map {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.72) 1px, transparent 1px),
+          linear-gradient(rgba(255, 255, 255, 0.72) 1px, transparent 1px),
+          linear-gradient(120deg, rgba(34, 160, 107, 0.12), rgba(22, 103, 232, 0.08)),
+          #dfe7ed;
+        background-size: 54px 54px, 54px 54px, auto, auto;
+      }
+
+      .map::before,
+      .map::after {
+        content: "";
+        position: absolute;
+        background: rgba(255, 255, 255, 0.62);
+        border-radius: 999px;
+        transform: rotate(-28deg);
+      }
+
+      .map::before {
+        width: 540px;
+        height: 30px;
+        left: -90px;
+        top: 230px;
+      }
+
+      .map::after {
+        width: 420px;
+        height: 24px;
+        left: 18px;
+        top: 440px;
+        transform: rotate(22deg);
+      }
+
+      .topbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 58px;
+        display: grid;
+        grid-template-columns: 48px 1fr 48px;
+        align-items: center;
+        padding: 0 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border-bottom: 1px solid rgba(217, 224, 234, 0.72);
+        backdrop-filter: blur(16px);
+        z-index: 4;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #334155;
+        font-size: 20px;
+      }
+
+      .title {
+        text-align: center;
+        color: var(--blue);
+        font-weight: 800;
+        font-size: 16px;
+      }
+
+      .sheet {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 5;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(217, 224, 234, 0.9);
+        border-radius: 26px;
+        box-shadow: 0 18px 44px rgba(16, 24, 39, 0.16);
+        padding: 16px;
+      }
+
+      .handle {
+        width: 44px;
+        height: 5px;
+        border-radius: 999px;
+        background: #d5dce8;
+        margin: 0 auto 14px;
+      }
+
+      .prompt {
+        text-align: center;
+        display: grid;
+        gap: 12px;
+      }
+
+      .prompt h2,
+      .sheet h2 {
+        margin: 0;
+        font-size: 21px;
+        line-height: 1.24;
+        letter-spacing: 0;
+      }
+
+      .prompt p,
+      .sheet p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .mic {
+        width: 78px;
+        height: 78px;
+        margin: 4px auto 0;
+        border: 0;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(22, 103, 232, 0.34);
+        display: grid;
+        place-items: center;
+        font-size: 32px;
+      }
+
+      .text-entry {
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        color: var(--muted);
+        background: #f8fafc;
+        text-align: left;
+        font-size: 13px;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #41526b;
+        border-radius: 999px;
+        min-height: 32px;
+        padding: 0 11px;
+        display: inline-flex;
+        align-items: center;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .chip.active {
+        background: var(--blue-weak);
+        border-color: rgba(22, 103, 232, 0.28);
+        color: var(--blue);
+      }
+
+      .pin {
+        position: absolute;
+        z-index: 2;
+        width: 26px;
+        height: 26px;
+        border: 4px solid #fff;
+        border-radius: 999px;
+        box-shadow: 0 8px 18px rgba(16, 24, 39, 0.2);
+      }
+
+      .pin.me {
+        left: 88px;
+        top: 286px;
+        background: var(--blue);
+      }
+
+      .pin.friend {
+        right: 72px;
+        top: 218px;
+        background: var(--red);
+      }
+
+      .pin.place {
+        left: 176px;
+        top: 360px;
+        width: 34px;
+        height: 34px;
+        background: var(--green);
+      }
+
+      .label {
+        position: absolute;
+        z-index: 3;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid rgba(217, 224, 234, 0.9);
+        padding: 7px 9px;
+        font-size: 11px;
+        color: #334155;
+        box-shadow: 0 8px 18px rgba(16, 24, 39, 0.1);
+      }
+
+      .label.me {
+        left: 66px;
+        top: 250px;
+      }
+
+      .label.friend {
+        right: 42px;
+        top: 181px;
+      }
+
+      .label.place {
+        left: 132px;
+        top: 326px;
+        background: #dff8e8;
+        border-color: rgba(34, 160, 107, 0.35);
+        color: #106842;
+        font-weight: 760;
+      }
+
+      .route {
+        position: absolute;
+        z-index: 1;
+        height: 0;
+        border-top: 2px dashed rgba(22, 103, 232, 0.68);
+        transform-origin: left center;
+      }
+
+      .route.a {
+        width: 116px;
+        left: 109px;
+        top: 303px;
+        transform: rotate(30deg);
+      }
+
+      .route.b {
+        width: 108px;
+        right: 93px;
+        top: 238px;
+        transform: rotate(128deg);
+      }
+
+      .slot-grid {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .slot {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--line);
+        background: #f9fbfd;
+        border-radius: 16px;
+        padding: 10px;
+      }
+
+      .dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .dot.blue {
+        background: var(--blue);
+      }
+
+      .dot.red {
+        background: var(--red);
+      }
+
+      .dot.green {
+        background: var(--green);
+      }
+
+      .slot b {
+        display: block;
+        font-size: 13px;
+      }
+
+      .slot small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .status {
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: var(--green);
+        background: var(--green-weak);
+        font-weight: 760;
+      }
+
+      .status.warn {
+        color: var(--amber);
+        background: var(--amber-weak);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .primary,
+      .secondary {
+        border: 0;
+        min-height: 46px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 14px;
+      }
+
+      .primary {
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #f8fafc;
+        color: var(--blue);
+        border: 1px solid var(--line);
+      }
+
+      .chat {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bubble {
+        max-width: 86%;
+        padding: 11px 12px;
+        border-radius: 17px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .bubble.ai {
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      .bubble.user {
+        justify-self: end;
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .missing {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 18px;
+        background: var(--amber-weak);
+        border: 1px solid rgba(183, 121, 31, 0.25);
+        color: #6f4b12;
+        font-size: 13px;
+        margin: 10px 0;
+      }
+
+      .pref-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 12px 0 14px;
+      }
+
+      .pref {
+        min-height: 74px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 12px;
+        display: grid;
+        align-content: center;
+        gap: 5px;
+      }
+
+      .pref.active {
+        border-color: rgba(22, 103, 232, 0.34);
+        background: var(--blue-weak);
+      }
+
+      .pref b {
+        font-size: 14px;
+      }
+
+      .pref span {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .plan-panel {
+        position: absolute;
+        left: 26px;
+        right: 26px;
+        top: 185px;
+        z-index: 5;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(217, 224, 234, 0.9);
+        border-radius: 28px;
+        padding: 18px;
+        text-align: center;
+        box-shadow: 0 20px 48px rgba(16, 24, 39, 0.12);
+      }
+
+      .pulse {
+        width: 82px;
+        height: 82px;
+        margin: 4px auto 16px;
+        border-radius: 999px;
+        border: 9px solid var(--blue-weak);
+        border-top-color: var(--blue);
+        display: grid;
+        place-items: center;
+        color: var(--blue);
+        font-size: 28px;
+      }
+
+      .steps {
+        display: grid;
+        gap: 9px;
+        text-align: left;
+        margin-top: 14px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 24px 1fr auto;
+        gap: 9px;
+        align-items: center;
+        font-size: 12px;
+        color: #42526a;
+      }
+
+      .check {
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--green);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+      }
+
+      .loading-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--blue-weak);
+        border: 5px solid #fff;
+        outline: 2px solid var(--blue);
+      }
+
+      .result-sheet {
+        padding-bottom: 14px;
+      }
+
+      .place-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+        margin-bottom: 10px;
+      }
+
+      .place-title h2 {
+        font-size: 20px;
+        margin: 0;
+      }
+
+      .badge {
+        white-space: nowrap;
+        border-radius: 999px;
+        background: var(--green-weak);
+        color: #16734f;
+        padding: 6px 9px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .reason {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 18px;
+        background: var(--blue-weak);
+        border: 1px solid rgba(22, 103, 232, 0.15);
+        margin: 12px 0;
+      }
+
+      .reason b {
+        display: block;
+        font-size: 12px;
+        color: var(--blue);
+      }
+
+      .reason span {
+        color: #41526b;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .candidate-list {
+        display: grid;
+        gap: 9px;
+        margin-top: 12px;
+      }
+
+      .candidate {
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 10px;
+      }
+
+      .candidate.top {
+        border-color: rgba(34, 160, 107, 0.35);
+        background: var(--green-weak);
+      }
+
+      .rank {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        background: #e8edf4;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .candidate.top .rank {
+        background: var(--green);
+        color: #fff;
+      }
+
+      .candidate b {
+        display: block;
+        font-size: 13px;
+      }
+
+      .candidate small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .score {
+        color: var(--green);
+        font-weight: 850;
+        font-size: 12px;
+      }
+
+      .detail-block {
+        display: grid;
+        gap: 9px;
+        margin: 14px 0;
+      }
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 84px 1fr;
+        gap: 12px;
+        border-bottom: 1px solid #eef1f5;
+        padding-bottom: 9px;
+        font-size: 13px;
+      }
+
+      .detail-row span:first-child {
+        color: var(--muted);
+      }
+
+      .adjust-bar {
+        display: flex;
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .adjust-bar .chip {
+        white-space: nowrap;
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          padding: 22px 14px 34px;
+        }
+
+        .hero {
+          display: grid;
+          align-items: start;
+        }
+
+        .legend {
+          justify-content: start;
+        }
+
+        .board {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          width: min(360px, calc(100vw - 28px));
+          height: min(780px, calc((100vw - 28px) * 2.16));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <h1>MeetPoint AI V1 手机端原型</h1>
+          <p>
+            这版原型把 Demo v0 升级为多轮约见决策助手：先识别双方位置，再补齐缺失信息，最后给出可比较、可解释、可继续调整的见面地点推荐。
+          </p>
+        </div>
+        <div class="legend">
+          <span>移动优先</span>
+          <span>多轮对话</span>
+          <span>地图结果态</span>
+          <span>三候选比较</span>
+        </div>
+      </header>
+
+      <section class="board" aria-label="MeetPoint AI mobile prototype screens">
+        <article class="frame-wrap">
+          <div class="caption"><strong>01 输入意图</strong><span>地图优先，语音主入口</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">≡</button>
+                <div class="title">聚点助手</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <div class="pin me"></div>
+              <div class="label me">当前位置</div>
+              <section class="sheet prompt">
+                <div class="handle"></div>
+                <h2>你们想在哪里见面？</h2>
+                <p>说出双方位置和大概场景，信息不完整时我会继续问。</p>
+                <button class="mic">◉</button>
+                <div class="text-entry">输入：我在杭州东站，朋友在杭州西站，想找个安静地方聊天</div>
+                <div class="chips">
+                  <span class="chip active">喝咖啡</span>
+                  <span class="chip">吃饭</span>
+                  <span class="chip">靠近地铁</span>
+                  <span class="chip">公平距离</span>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>02 信息确认</strong><span>抽取结果可见可改</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">确认地点信息</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <div class="pin me"></div>
+              <div class="pin friend"></div>
+              <section class="sheet">
+                <div class="handle"></div>
+                <h2>我理解的是这些信息</h2>
+                <p>确认无误后，我会基于地图和偏好推荐候选地点。</p>
+                <div class="slot-grid">
+                  <div class="slot">
+                    <span class="dot blue">我</span>
+                    <div><b>杭州东站</b><small>上城区，全量匹配</small></div>
+                    <span class="status">已识别</span>
+                  </div>
+                  <div class="slot">
+                    <span class="dot red">友</span>
+                    <div><b>杭州西站</b><small>余杭区，全量匹配</small></div>
+                    <span class="status">已识别</span>
+                  </div>
+                  <div class="slot">
+                    <span class="dot green">景</span>
+                    <div><b>聊天 / 咖啡</b><small>偏安静，适合停留</small></div>
+                    <span class="status warn">待确认</span>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="secondary">修改</button>
+                  <button class="primary">开始推荐</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>03 缺失追问</strong><span>只问当前最关键问题</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">补充信息</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <section class="sheet">
+                <div class="handle"></div>
+                <div class="chat">
+                  <div class="bubble user">我们该去哪里见面？</div>
+                  <div class="bubble ai">我还需要知道你和对方分别在哪里。</div>
+                </div>
+                <div class="missing">
+                  <b>缺少必要地点</b>
+                  <span>请补充双方出发点，例如“我在杭州东站，朋友在杭州西站”。</span>
+                </div>
+                <div class="text-entry">输入或按住说话</div>
+                <div class="chips" style="margin-top: 10px">
+                  <span class="chip active">我在杭州东站</span>
+                  <span class="chip">朋友在杭州西站</span>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>04 偏好选择</strong><span>让推荐从能用变得合适</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">偏好</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <section class="sheet">
+                <div class="handle"></div>
+                <h2>你更在意什么？</h2>
+                <p>可以跳过，但选择后推荐理由会更贴近真实场景。</p>
+                <div class="pref-grid">
+                  <div class="pref active"><b>公平距离</b><span>尽量平衡双方通勤</span></div>
+                  <div class="pref active"><b>安静聊天</b><span>适合坐下停留</span></div>
+                  <div class="pref"><b>靠近地铁</b><span>公共交通更方便</span></div>
+                  <div class="pref"><b>离朋友近</b><span>对方少走一点</span></div>
+                  <div class="pref"><b>吃饭方便</b><span>餐厅选择更多</span></div>
+                  <div class="pref"><b>预算友好</b><span>优先平价地点</span></div>
+                </div>
+                <button class="primary" style="width: 100%">生成推荐</button>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>05 智能分析</strong><span>展示工具链进度</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">正在规划</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <section class="plan-panel">
+                <div class="pulse">⌖</div>
+                <h2>正在为你比较地点</h2>
+                <p>会同时考虑双方位置、交通公平性和聊天场景。</p>
+                <div class="steps">
+                  <div class="step"><span class="check">✓</span><span>识别双方出发点</span><span>完成</span></div>
+                  <div class="step"><span class="check">✓</span><span>高德解析经纬度</span><span>完成</span></div>
+                  <div class="step"><span class="loading-dot"></span><span>搜索中间区域候选地点</span><span>进行中</span></div>
+                  <div class="step"><span class="loading-dot"></span><span>生成推荐理由和取舍</span><span>等待</span></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>06 推荐比较</strong><span>地图结果态 + 三候选</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">推荐结果</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <div class="label me">杭州东站</div>
+              <div class="label friend">杭州西站</div>
+              <div class="label place">西湖文化广场</div>
+              <div class="pin me"></div>
+              <div class="pin friend"></div>
+              <div class="pin place"></div>
+              <div class="route a"></div>
+              <div class="route b"></div>
+              <section class="sheet result-sheet">
+                <div class="handle"></div>
+                <div class="place-title">
+                  <h2>西湖文化广场</h2>
+                  <span class="badge">推荐 92</span>
+                </div>
+                <p>更接近双方中间区域，公共交通选择多，也适合找咖啡店坐下聊。</p>
+                <div class="candidate-list">
+                  <div class="candidate top">
+                    <span class="rank">1</span>
+                    <div><b>西湖文化广场</b><small>公平距离 / 咖啡选择多</small></div>
+                    <span class="score">92</span>
+                  </div>
+                  <div class="candidate">
+                    <span class="rank">2</span>
+                    <div><b>武林广场</b><small>交通更强 / 人流较多</small></div>
+                    <span class="score">86</span>
+                  </div>
+                  <div class="candidate">
+                    <span class="rank">3</span>
+                    <div><b>城西银泰</b><small>更靠近朋友 / 距你较远</small></div>
+                    <span class="score">78</span>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="primary">播放回复</button>
+                  <button class="secondary">继续调整</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+
+        <article class="frame-wrap">
+          <div class="caption"><strong>07 详情调整</strong><span>确认或继续对话</span></div>
+          <div class="phone">
+            <div class="screen">
+              <div class="map"></div>
+              <div class="topbar">
+                <button class="icon-btn">‹</button>
+                <div class="title">地点详情</div>
+                <button class="icon-btn">↺</button>
+              </div>
+              <div class="pin me"></div>
+              <div class="pin friend"></div>
+              <div class="pin place"></div>
+              <section class="sheet">
+                <div class="handle"></div>
+                <div class="place-title">
+                  <h2>西湖文化广场</h2>
+                  <span class="badge">最均衡</span>
+                </div>
+                <div class="reason">
+                  <span class="dot blue">因</span>
+                  <div>
+                    <b>推荐理由</b>
+                    <span>位于双方路线交汇区域，地铁和商场配套都比较成熟，适合临时约见和聊天。</span>
+                  </div>
+                </div>
+                <div class="detail-block">
+                  <div class="detail-row"><span>适合场景</span><span>咖啡、聊天、轻量会面</span></div>
+                  <div class="detail-row"><span>主要优势</span><span>交通均衡，容易碰头</span></div>
+                  <div class="detail-row"><span>可能取舍</span><span>高峰期人流较多，安静程度一般</span></div>
+                  <div class="detail-row"><span>可信度</span><span>地点清晰，路线数据待进一步接入</span></div>
+                </div>
+                <div class="adjust-bar">
+                  <span class="chip active">确认这个</span>
+                  <span class="chip">换安静点</span>
+                  <span class="chip">离朋友近</span>
+                  <span class="chip">适合吃饭</span>
+                </div>
+                <div class="actions">
+                  <button class="primary">确认方案</button>
+                  <button class="secondary">重新录音</button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
