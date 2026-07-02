@@ -1,41 +1,41 @@
 # Meeting Agent
 
-Meeting Agent is a mobile-first AI meeting-point recommender. The current codebase contains a working Demo v0 that connects voice recording, ASR, location extraction, Amap-based meeting-point recommendation, map rendering, TTS playback, and history review.
+Meeting Agent 是一个移动端优先的 AI 见面地点推荐项目。当前代码库保留了一版可运行的 Demo v0，已经打通语音录制、ASR 识别、地点提取、高德推荐、地图展示、TTS 语音回复和历史记录查看等链路。
 
-The product direction for V1 is a chat-first Agent experience: users describe where each person is and what kind of place they want, then the assistant asks follow-up questions and recommends meeting places inside the conversation.
+V1 的产品方向是「对话式 Agent 助手」：用户用自然语言描述双方位置和见面偏好，助手在对话中追问缺失信息，并在聊天框里推荐合适的见面地点。
 
-## Current Version
+## 当前版本
 
-- `main`: Demo v0 baseline.
-- `v0-demo`: tag for the current runnable demo.
-- `feat/chat-agent-v1`: active branch for the chat-first Agent redesign.
+- `main`：Demo v0 基线版本。
+- `v0-demo`：当前可运行 Demo 的标签。
+- `feat/chat-agent-v1`：正在开发的对话式 Agent 版本分支。
 
-## Features
+## 功能概览
 
-- Mobile-first React interface.
-- Browser voice recording with upload to the backend.
-- Bailian ASR for speech-to-text.
-- DeepSeek-based address extraction with local fallback handling.
-- Amap MCP / REST geocoding and POI recommendation.
-- Amap JS map rendering in the frontend.
-- Bailian TTS for voice reply.
-- Local history stored under `Storage/`.
-- V1 PRD and mobile prototype under `docs/`.
+- 移动端优先的 React 界面。
+- 浏览器录音并上传到后端。
+- 使用百炼 ASR 完成语音转文字。
+- 使用 DeepSeek 提取双方地点，并带有本地兜底逻辑。
+- 使用高德 MCP / REST 能力完成地理编码和候选地点推荐。
+- 前端集成高德 JS 地图展示推荐结果。
+- 使用百炼 TTS 生成语音回复。
+- 本地保存推荐历史，便于回看。
+- `docs/` 下包含 V1 PRD、移动端原型和接口接入说明。
 
-## Project Structure
+## 目录结构
 
 ```text
 .
-├── backend/                 # FastAPI backend
+├── backend/                 # FastAPI 后端
 │   ├── app/
-│   │   ├── main.py          # FastAPI app and CORS setup
-│   │   ├── routes.py        # API routes and pipeline orchestration
-│   │   ├── config.py        # .env parsing and runtime settings
-│   │   └── services/        # Bailian, DeepSeek, and Amap clients
-│   ├── tests/               # Backend unit tests
+│   │   ├── main.py          # FastAPI 应用和 CORS 配置
+│   │   ├── routes.py        # API 路由和推荐链路编排
+│   │   ├── config.py        # .env 解析和运行配置
+│   │   └── services/        # 百炼、DeepSeek、高德服务封装
+│   ├── tests/               # 后端单元测试
 │   ├── requirements.txt
 │   └── .env.example
-├── frontend/                # React + Vite frontend
+├── frontend/                # React + Vite 前端
 │   ├── src/
 │   │   ├── App.jsx
 │   │   ├── AmapPanel.jsx
@@ -44,19 +44,19 @@ The product direction for V1 is a chat-first Agent experience: users describe wh
 │   │   └── styles.css
 │   ├── package.json
 │   └── .env.example
-├── docs/                    # Integration docs, PRD, and prototypes
-├── Storage/                 # Runtime audio/log/pipeline artifacts, ignored by Git
+├── docs/                    # 接入文档、PRD 和原型
+├── Storage/                 # 运行时音频、日志和链路产物，已被 Git 忽略
 └── README.md
 ```
 
-## Prerequisites
+## 环境要求
 
-- Python 3.12 recommended.
-- Node.js 20+ recommended.
-- API credentials for Bailian, DeepSeek, and Amap.
-- Optional: Amap MCP server URL if using the MCP path.
+- 推荐使用 Python 3.12。
+- 推荐使用 Node.js 20+。
+- 需要准备百炼、DeepSeek 和高德相关 API Key。
+- 如走高德 MCP 链路，需要配置可用的高德 MCP Server URL。
 
-## Backend Setup
+## 后端启动
 
 ```bash
 cd backend
@@ -66,7 +66,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `backend/.env` and fill in the required credentials:
+编辑 `backend/.env`，填写必要密钥：
 
 ```text
 BAILIAN_API_KEY=
@@ -77,7 +77,7 @@ AMAP_JS_API_KEY=
 AMAP_JS_SECURITY_CODE=
 ```
 
-Start the backend:
+启动后端：
 
 ```bash
 cd backend
@@ -85,19 +85,19 @@ source .venv-run312/bin/activate
 PYTHONPATH=. uvicorn app.main:app --host 0.0.0.0 --port 8013 --reload
 ```
 
-Health check:
+健康检查：
 
 ```bash
 curl http://localhost:8013/health
 ```
 
-Expected response:
+预期返回：
 
 ```json
 {"status":"ok"}
 ```
 
-## Frontend Setup
+## 前端启动
 
 ```bash
 cd frontend
@@ -106,93 +106,92 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The frontend runs at:
+前端默认运行在：
 
 ```text
 http://localhost:5177/
 ```
 
-By default, the frontend calls:
+默认推荐接口：
 
 ```text
 /api/meeting-point/recommend
 ```
 
-If the frontend is not served through a proxy, set `VITE_RECOMMEND_ENDPOINT` in `frontend/.env.local` to the full backend URL.
+如果前端没有通过代理访问后端，可以在 `frontend/.env.local` 中把 `VITE_RECOMMEND_ENDPOINT` 改成完整后端地址。
 
-## API Overview
+## API 概览
 
-Backend base URL:
+后端默认地址：
 
 ```text
 http://localhost:8013
 ```
 
-Important endpoints:
+主要接口：
 
-- `GET /health`: service health check.
-- `GET /api/client-config`: frontend map configuration.
-- `POST /api/meeting-point/recommend`: upload audio and run the recommendation pipeline.
-- `GET /api/meeting-point/history`: list saved recommendation history.
-- `GET /api/meeting-point/history/{request_id}`: load one recommendation result.
+- `GET /health`：服务健康检查。
+- `GET /api/client-config`：前端地图配置。
+- `POST /api/meeting-point/recommend`：上传录音并执行推荐链路。
+- `GET /api/meeting-point/history`：获取推荐历史列表。
+- `GET /api/meeting-point/history/{request_id}`：获取单条推荐详情。
 
-## Verification
+## 验证命令
 
-Run backend tests:
+运行后端测试：
 
 ```bash
 source backend/.venv-run312/bin/activate
 PYTHONPATH=backend python -m unittest backend/tests/test_routes_validation.py backend/tests/test_deepseek_extractor.py
 ```
 
-Run frontend view-model tests:
+运行前端 view model 测试：
 
 ```bash
 cd frontend
 node --test src/mobileViewModel.test.js
 ```
 
-Build the frontend:
+构建前端：
 
 ```bash
 cd frontend
 npm run build
 ```
 
-## Docs And Prototype
+## 文档和原型
 
-- V1 PRD: `docs/superpowers/specs/2026-07-01-meetpoint-v1-prd.md`
-- Mobile prototype: `docs/prototypes/meetpoint-v1-mobile-prototype.html`
-- Amap integration notes: `docs/高德MCP_接入说明.md`
-- DeepSeek integration notes: `docs/DeepSeek_开发规范.md`
+- V1 PRD：`docs/superpowers/specs/2026-07-01-meetpoint-v1-prd.md`
+- 移动端原型：`docs/prototypes/meetpoint-v1-mobile-prototype.html`
+- 高德接入说明：`docs/高德MCP_接入说明.md`
+- DeepSeek 接入说明：`docs/DeepSeek_开发规范.md`
 
-Open the prototype directly in a browser:
+可以直接在浏览器中打开原型：
 
 ```text
 docs/prototypes/meetpoint-v1-mobile-prototype.html
 ```
 
-## Runtime Artifacts
+## 运行时产物
 
-The backend writes runtime files to `Storage/`, including:
+后端会把运行时文件写入 `Storage/`，包括：
 
-- uploaded audio files;
-- ASR results;
-- DeepSeek extraction results;
-- Amap MCP traces;
-- TTS results;
-- pipeline summaries;
-- backend logs.
+- 用户上传的录音文件；
+- ASR 识别结果；
+- DeepSeek 地点提取结果；
+- 高德 MCP 调用链路；
+- TTS 生成结果；
+- pipeline 汇总结果；
+- 后端日志。
 
-`Storage/` is ignored by Git and should not be committed.
+`Storage/` 已被 Git 忽略，不应提交到仓库。
 
-## Security Notes
+## 安全注意事项
 
-- Do not commit `backend/.env` or any real API keys.
-- Only `.env.example` files should be tracked.
-- Generated audio, logs, local virtual environments, `node_modules`, and build outputs are ignored by Git.
+- 不要提交 `backend/.env` 或任何真实 API Key。
+- 仓库只应跟踪 `.env.example` 示例文件。
+- 生成的音频、日志、本地虚拟环境、`node_modules` 和构建产物都已被 Git 忽略。
 
-## Development Notes
+## 开发说明
 
-The current runnable Demo v0 is intentionally preserved. New product work should continue on `feat/chat-agent-v1`, where the UI and backend contract can evolve toward a chat-first Agent assistant.
-
+当前可运行的 Demo v0 会保留作为基线。后续新产品形态在 `feat/chat-agent-v1` 分支继续开发，目标是把当前地图工具式 Demo 升级为「对话式见面地点决策 Agent」。
